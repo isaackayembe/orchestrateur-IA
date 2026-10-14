@@ -1,0 +1,9 @@
+# Copiez ce fichier en .dev.vars pour tester en local (npm run dev).
+# Ne le publiez jamais : il contient vos clés.
+GROQ_API_KEY=
+GEMINI_API_KEY=
+MISTRAL_API_KEY=
+OPENROUTER_API_KEY=
+CF_API_TOKEN=
+CF_ACCOUNT_ID=
+ADMIN_KEYS=admin_local_0123456789abcdef

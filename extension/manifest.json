@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Assistant IA",
+  "version": "0.2.0",
+  "description": "Assistant IA gratuit, multi-modèles, via l'orchestrateur.",
+  "permissions": ["storage", "identity"],
+  "host_permissions": [
+    "https://orchestrateur-ia.VOTRE-SOUS-DOMAINE.workers.dev/*",
+    "http://127.0.0.1:8787/*",
+    "https://openrouter.ai/*"
+  ],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_title": "Ouvrir l'assistant IA" },
+  "options_ui": { "page": "index.html", "open_in_tab": true }
+}

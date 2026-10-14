@@ -1,0 +1,72 @@
+{
+  "name": "orchestrateur-ia",
+  "displayName": "Assistant IA (Orchestrateur)",
+  "description": "Chat IA gratuit multi-modèles dans l'éditeur : expliquer, corriger et écrire du code, avec historique.",
+  "version": "0.1.0",
+  "publisher": "votre-nom",
+  "license": "MIT",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["AI", "Chat", "Programming Languages"],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "orchestrateurIA", "title": "Assistant IA", "icon": "media/icon.svg" }
+      ]
+    },
+    "views": {
+      "orchestrateurIA": [
+        { "type": "webview", "id": "orchestrateurIA.chat", "name": "Chat" }
+      ]
+    },
+    "commands": [
+      { "command": "orchestrateurIA.ouvrir", "title": "Ouvrir le chat", "category": "Assistant IA" },
+      { "command": "orchestrateurIA.nouvelle", "title": "Nouvelle conversation", "category": "Assistant IA", "icon": "$(add)" },
+      { "command": "orchestrateurIA.expliquer", "title": "Expliquer la sélection", "category": "Assistant IA" },
+      { "command": "orchestrateurIA.corriger", "title": "Corriger et améliorer la sélection", "category": "Assistant IA" },
+      { "command": "orchestrateurIA.parametres", "title": "Paramètres et connexion", "category": "Assistant IA", "icon": "$(gear)" },
+      { "command": "orchestrateurIA.connecterOpenRouter", "title": "Se connecter avec OpenRouter", "category": "Assistant IA" },
+      { "command": "orchestrateurIA.ajouterCle", "title": "Ajouter une clé (Gemini, Groq, Mistral, OpenRouter)", "category": "Assistant IA" },
+      { "command": "orchestrateurIA.supprimerCles", "title": "Supprimer mes clés", "category": "Assistant IA" },
+      { "command": "orchestrateurIA.cleAdmin", "title": "Clé administrateur (aucune limite)", "category": "Assistant IA" },
+      { "command": "orchestrateurIA.baseConnaissances", "title": "Ouvrir la base de connaissances (admin)", "category": "Assistant IA" }
+    ],
+    "menus": {
+      "view/title": [
+        { "command": "orchestrateurIA.nouvelle", "when": "view == orchestrateurIA.chat", "group": "navigation" },
+        { "command": "orchestrateurIA.parametres", "when": "view == orchestrateurIA.chat", "group": "navigation" }
+      ],
+      "editor/context": [
+        { "command": "orchestrateurIA.expliquer", "when": "editorHasSelection", "group": "orchestrateurIA@1" },
+        { "command": "orchestrateurIA.corriger", "when": "editorHasSelection", "group": "orchestrateurIA@2" }
+      ]
+    },
+    "keybindings": [
+      { "command": "orchestrateurIA.ouvrir", "key": "ctrl+alt+i", "mac": "cmd+alt+i" },
+      { "command": "orchestrateurIA.expliquer", "key": "ctrl+alt+e", "mac": "cmd+alt+e", "when": "editorHasSelection" }
+    ],
+    "configuration": {
+      "title": "Assistant IA",
+      "properties": {
+        "orchestrateurIA.url": {
+          "type": "string",
+          "default": "https://orchestrateur-ia.VOTRE-SOUS-DOMAINE.workers.dev",
+          "description": "Adresse de votre orchestrateur."
+        },
+        "orchestrateurIA.partagerConversations": {
+          "type": "boolean",
+          "default": false,
+          "description": "Partager mes conversations, anonymisées, pour enrichir la base de connaissances et entraîner le modèle."
+        },
+        "orchestrateurIA.contexteMaxCaracteres": {
+          "type": "number",
+          "default": 20000,
+          "description": "Taille maximale du fichier ou de la sélection joint à une question."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "package": "npx @vscode/vsce package"
+  }
+}

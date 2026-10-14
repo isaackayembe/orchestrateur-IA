@@ -1,0 +1,26 @@
+name = "orchestrateur-ia"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[observability]
+enabled = true
+
+[vars]
+ALLOW_BYOK = "true"
+ALLOW_TRIAL = "true"
+TRIAL_DAILY_LIMIT = "20"
+TRIAL_IP_DAILY_LIMIT = "60"
+APPRENTISSAGE = "true"
+TAUX_EXTRACTION = "0.3"
+VALIDATION_AUTO_ADMIN = "true"
+
+[assets]
+directory = "./public"
+
+[[d1_databases]]
+binding = "DB_SAVOIR"
+database_name = "orchestrateur-savoir"
+database_id = "local-savoir"
+
+[triggers]
+crons = ["17 3 * * *"]

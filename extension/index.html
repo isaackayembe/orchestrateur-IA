@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistant IA</title>
+<style>
+  :root {
+    --fond:#F4F3EE; --lateral:#ECE9E1; --carte:#FBFAF7; --texte:#12161F; --doux:#5A6372; --bord:#DCD8CD;
+    --accent:#C2561B; --ok:#2F6BC4; --err:#A12A1A; --survol:#E3DFD4; --code:#1B202B; --codeTexte:#E6E9EF;
+    --ombre:0 6px 24px rgba(18,22,31,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fond:#14171E; --lateral:#1A1E27; --carte:#1F2430; --texte:#ECEAE4; --doux:#A3ABB9; --bord:#2E3544;
+      --accent:#F0954F; --ok:#8FB3F0; --err:#F08A7A; --survol:#262C39; --code:#0E1117; --codeTexte:#E6E9EF;
+      --ombre:0 6px 24px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing:border-box; }
+  html, body { height:100%; }
+  body { margin:0; background:var(--fond); color:var(--texte); font:16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  button { font:inherit; color:inherit; cursor:pointer; }
+
+  .app { display:grid; grid-template-columns:280px 1fr; height:100vh; }
+
+  /* ----- Historique ----- */
+  .historique { background:var(--lateral); border-right:1px solid var(--bord); display:flex; flex-direction:column; gap:10px; padding:14px; min-height:0; }
+  .nouveau { border:1px solid var(--bord); background:var(--carte); border-radius:12px; padding:10px 12px; text-align:left; font-weight:600; }
+  .nouveau:hover { background:var(--survol); }
+  .filtre { font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--bord); border-radius:10px; background:var(--carte); color:var(--texte); }
+  .liste { overflow-y:auto; min-height:0; display:flex; flex-direction:column; gap:2px; margin:0 -6px; padding:0 6px; }
+  .groupe { font-size:12px; font-weight:600; color:var(--doux); text-transform:uppercase; letter-spacing:.04em; margin:12px 6px 4px; }
+  .item { display:flex; align-items:center; border-radius:10px; }
+  .item:hover, .item.active { background:var(--survol); }
+  .item .ouvrir { flex:1; min-width:0; text-align:left; border:0; background:none; padding:8px 10px; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .item .suppr { border:0; background:none; color:var(--doux); padding:4px 10px; font-size:18px; line-height:1; visibility:hidden; }
+  .item:hover .suppr, .item.active .suppr { visibility:visible; }
+  .vide-histo { color:var(--doux); font-size:14px; margin:8px 6px; }
+
+  /* ----- Zone principale ----- */
+  .principal { display:flex; flex-direction:column; min-height:0; position:relative; }
+  .basculer { display:none; position:absolute; top:12px; left:12px; border:1px solid var(--bord); background:var(--carte); border-radius:10px; padding:6px 10px; z-index:2; }
+  .fil { flex:1; overflow-y:auto; padding:32px 16px 16px; }
+  .fil > * { max-width:760px; margin-left:auto; margin-right:auto; }
+  .accueil { display:none; text-align:center; }
+  .accueil h1 { font-size:34px; font-weight:600; margin:0 0 6px; letter-spacing:-.01em; }
+  .accueil p { margin:0; color:var(--doux); }
+
+  body.vide .fil { display:none; }
+  body.vide .principal { justify-content:center; }
+  body.vide .accueil { display:block; padding:0 16px 24px; }
+
+  /* Messages */
+  .msg { margin-bottom:22px; }
+  .msg.user { display:flex; justify-content:flex-end; }
+  .msg.user .texte { background:var(--carte); border:1px solid var(--bord); border-radius:18px 18px 4px 18px; padding:10px 16px; max-width:85%; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .msg.assistant .corps { overflow-wrap:anywhere; }
+  .msg.assistant .corps > :first-child { margin-top:0; }
+  .msg.assistant .corps > :last-child { margin-bottom:0; }
+  .msg.assistant p { margin:0 0 10px; }
+  .msg.assistant h3, .msg.assistant h4, .msg.assistant h5, .msg.assistant h6 { margin:16px 0 8px; font-size:17px; }
+  .msg.assistant ul, .msg.assistant ol { margin:0 0 10px; padding-left:22px; }
+  .msg.assistant code { font-family:ui-monospace, "Cascadia Code", Menlo, monospace; font-size:14px; background:var(--survol); padding:1px 5px; border-radius:5px; }
+  .msg.assistant pre { position:relative; background:var(--code); color:var(--codeTexte); border-radius:12px; padding:14px 16px; overflow-x:auto; margin:0 0 12px; }
+  .msg.assistant pre code { background:none; padding:0; color:inherit; }
+  .copier { position:absolute; top:8px; right:8px; font-size:12px; border:1px solid #3A4152; background:#262C39; color:#E6E9EF; border-radius:7px; padding:2px 8px; opacity:.85; }
+  .meta { font-size:12px; color:var(--doux); margin-top:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .avis { display:inline-flex; gap:2px; }
+  .avis button { border:1px solid transparent; background:none; border-radius:7px; padding:0 5px; font-size:13px; line-height:22px; opacity:.55; }
+  .avis button:hover { opacity:1; background:var(--survol); }
+  .avis button[aria-pressed="true"] { opacity:1; border-color:var(--bord); background:var(--carte); }
+  .msg.assistant img { max-width:100%; max-height:420px; border-radius:10px; border:1px solid var(--bord); display:block; margin:6px 0 10px; }
+  .msg.assistant a { color:var(--accent); }
+  .bandeau { max-width:760px; margin:0 auto 10px; background:var(--carte); border:1px solid var(--bord); border-radius:14px; padding:12px 14px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-size:14px; }
+  .bandeau[hidden] { display:none; }
+  .bandeau p { margin:0; flex:1; min-width:240px; color:var(--doux); }
+  .bandeau b { color:var(--texte); }
+  .bandeau-actions { display:flex; gap:8px; }
+  .bandeau button { border:1px solid var(--bord); background:var(--fond); border-radius:10px; padding:7px 12px; font-size:14px; }
+  .bandeau button.oui { background:var(--texte); color:var(--fond); border-color:var(--texte); font-weight:600; }
+  .msg.erreur .corps { color:var(--err); }
+  .msg.erreur .lien { margin-top:8px; border:0; background:var(--texte); color:var(--fond); border-radius:10px; padding:8px 14px; font-weight:600; }
+  .curseur::after { content:"▍"; animation:clignote 1s steps(1) infinite; color:var(--doux); }
+  @keyframes clignote { 50% { opacity:0; } }
+
+  /* ----- Barre de recherche ----- */
+  .barre-zone { padding:8px 16px 20px; }
+  .barre { max-width:760px; margin:0 auto; background:var(--carte); border:1px solid var(--bord); border-radius:24px; box-shadow:var(--ombre); padding:12px 12px 10px 18px; display:flex; flex-direction:column; gap:8px; }
+  .barre:focus-within { border-color:var(--doux); }
+  .saisie { font:inherit; font-size:17px; border:0; outline:0; resize:none; background:none; color:var(--texte); max-height:200px; padding:4px 0; }
+  .actions { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .pastille { display:inline-flex; align-items:center; gap:8px; border:1px solid var(--bord); background:var(--fond); border-radius:999px; padding:5px 12px; font-size:13px; font-weight:600; }
+  .pastille:hover { background:var(--survol); }
+  .pastille .point { width:8px; height:8px; border-radius:50%; background:var(--accent); }
+  .pastille.connecte .point { background:var(--ok); }
+  .envoyer { width:38px; height:38px; border-radius:50%; border:0; background:var(--texte); color:var(--fond); font-size:18px; font-weight:700; display:grid; place-items:center; }
+  .envoyer:disabled { opacity:.35; cursor:default; }
+  .aide { max-width:760px; margin:8px auto 0; text-align:center; font-size:12px; color:var(--doux); }
+
+  /* ----- Fenêtre des paramètres ----- */
+  .modale { position:fixed; inset:0; background:rgba(10,12,16,.45); display:grid; place-items:center; padding:16px; z-index:10; }
+  .modale[hidden] { display:none; }
+  .modale-boite { position:relative; background:var(--fond); border:1px solid var(--bord); border-radius:18px; width:min(620px, 100%); max-height:calc(100vh - 32px); overflow-y:auto; padding:24px; box-shadow:var(--ombre); }
+  .fermer { position:absolute; top:12px; right:12px; border:0; background:none; font-size:24px; line-height:1; color:var(--doux); padding:4px 8px; }
+  .p-titre { margin:0 0 14px; font-size:22px; }
+  .p-statut { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .p-statut p, .p-carte p { margin:0; color:var(--doux); }
+  .badge { font-size:13px; font-weight:600; padding:4px 10px; border-radius:999px; background:var(--survol); white-space:nowrap; }
+  .badge.ok { background:#DCE7F7; color:#1D4A8F; }
+  .p-carte { background:var(--carte); border:1px solid var(--bord); border-radius:14px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+  .p-carte h3 { margin:0; font-size:17px; }
+  details.p-carte { display:block; }
+  details.p-carte > p { margin-top:8px; }
+  summary { cursor:pointer; font-weight:600; }
+  .p-ligne { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .p-entete { justify-content:space-between; }
+  .p-ligne input { flex:1; min-width:180px; font:inherit; padding:8px 10px; border:1px solid var(--bord); border-radius:10px; background:var(--fond); color:var(--texte); }
+  .p-ligne button { border-radius:10px; border:1px solid var(--bord); background:var(--fond); padding:8px 12px; }
+  .p-principal { background:var(--texte) !important; color:var(--fond); border-color:var(--texte) !important; padding:11px 16px !important; font-weight:600; }
+  .p-fournisseur { border-top:1px solid var(--bord); padding-top:12px; margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+  .p-msg { font-size:14px; margin:0; min-height:0; }
+  .p-msg:empty { display:none; }
+  .p-msg.ok { color:var(--ok); } .p-msg.err { color:var(--err); }
+  .p-note { font-size:13px; color:var(--doux); margin:0; }
+  .p-case { display:flex; gap:8px; align-items:center; font-weight:600; cursor:pointer; }
+  a { color:var(--accent); }
+
+  /* ----- Petits écrans ----- */
+  @media (max-width: 760px) {
+    .app { grid-template-columns:1fr; }
+    .historique { position:fixed; inset:0 auto 0 0; width:min(300px, 85vw); z-index:5; transform:translateX(-100%); transition:transform .2s; }
+    body.histo-ouvert .historique { transform:none; box-shadow:var(--ombre); }
+    .basculer { display:block; }
+    .fil { padding-top:56px; }
+  }
+</style>
+</head>
+<body class="vide">
+<div class="app">
+  <aside class="historique" aria-label="Historique des conversations">
+    <button id="nouveau" class="nouveau">+ Nouvelle conversation</button>
+    <input id="filtre" class="filtre" type="search" placeholder="Rechercher dans l'historique">
+    <nav id="listeConv" class="liste"></nav>
+  </aside>
+
+  <main class="principal">
+    <button id="basculer" class="basculer" aria-label="Afficher l'historique">☰</button>
+    <section id="fil" class="fil" aria-live="polite"></section>
+    <div class="accueil">
+      <h1>Que voulez-vous savoir ?</h1>
+      <p>Plusieurs IA gratuites, la bonne choisie pour chaque question.</p>
+    </div>
+    <div class="barre-zone">
+      <div id="bandeau" class="bandeau" hidden>
+        <p>Aidez-nous à améliorer l'assistant : acceptez-vous que vos conversations, <b>anonymisées</b>, servent à enrichir ses connaissances et à entraîner notre modèle ?</p>
+        <div class="bandeau-actions">
+          <button id="partageOui" type="button" class="oui">Oui, j'accepte</button>
+          <button id="partageNon" type="button">Non merci</button>
+        </div>
+      </div>
+      <form id="barre" class="barre">
+        <textarea id="saisie" class="saisie" rows="1" placeholder="Posez votre question…" aria-label="Votre question"></textarea>
+        <div class="actions">
+          <button type="button" id="pastille" class="pastille" title="Paramètres et connexion">
+            <span class="point"></span><span id="pastilleTexte">…</span>
+          </button>
+          <button type="submit" id="envoyer" class="envoyer" aria-label="Envoyer" disabled>↑</button>
+        </div>
+      </form>
+      <p class="aide">Entrée pour envoyer · Maj+Entrée pour aller à la ligne</p>
+    </div>
+  </main>
+</div>
+
+<div id="modale" class="modale" hidden>
+  <div class="modale-boite" role="dialog" aria-modal="true" aria-label="Paramètres">
+    <button id="fermer" class="fermer" aria-label="Fermer">×</button>
+    <div id="parametres"></div>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
