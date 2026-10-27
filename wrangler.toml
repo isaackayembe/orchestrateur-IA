@@ -20,7 +20,7 @@ directory = "./public"
 [[d1_databases]]
 binding = "DB_SAVOIR"
 database_name = "orchestrateur-savoir"
-database_id = "local-savoir"
+database_id = "35218c20-f776-498d-85e2-b1226d2fb51d"
 
 [triggers]
 crons = ["17 3 * * *"]
