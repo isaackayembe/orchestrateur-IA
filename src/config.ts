@@ -45,7 +45,11 @@ export interface Env {
   MON_MODELE_BASE?: string; // modèle de base compatible LoRA (défaut : @cf/mistral/mistral-7b-instruct-v0.2-lora)
   MON_MODELE_TACHES?: string; // tâches où il passe en premier, ex. "chat,summary" (défaut)
   MON_MODELE_RAW?: string; // "true" : n'applique pas le modèle de conversation par défaut
+
+  // Liaison vers les fichiers statiques (dossier public/)
+  ASSETS?: Fetcher; // ← LIGNE AJOUTÉE ICI
 }
+
 
 // Ce que les licences permettent pour entraîner VOTRE modèle sur les réponses d'un modèle.
 // Indicatif, à vérifier vous-même dans chaque licence (ce n'est pas un avis juridique).

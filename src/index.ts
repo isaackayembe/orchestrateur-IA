@@ -245,5 +245,8 @@ export async function handle(req: Request, env: Env, ctx?: Pick<ExecutionContext
     return res;
   }
 
+  if (env.ASSETS) return env.ASSETS.fetch(req);
+
   return json(404, { error: { message: "Route inconnue.", type: "not_found" } });
 }
+ 

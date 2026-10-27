@@ -16,6 +16,11 @@ VALIDATION_AUTO_ADMIN = "true"
 
 [assets]
 directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/v1/*", "/admin/*", "/images/*", "/health"]
+
+
 
 [[d1_databases]]
 binding = "DB_SAVOIR"
